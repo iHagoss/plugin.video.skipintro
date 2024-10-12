@@ -1,3 +1,4 @@
 # Exclude virtual environment and VSCode settings
 .venv/
 .vscode/
+video_metadata_extract.txt
