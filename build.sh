@@ -27,6 +27,9 @@ sed -i '' "s/version=\"$CURRENT_VERSION\"/version=\"$NEW_VERSION\"/" $ADDON_XML
 # Log the version update
 echo "Updated version from $CURRENT_VERSION to $NEW_VERSION"
 
+# Output the new version for GitHub Actions
+echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
 # Compress the project folder into a zip file, excluding .venv and .vscode directories
 ZIP_FILE="plugin.video.skipintro-$NEW_VERSION.zip"
 zip -r $ZIP_FILE . -x "*.git*" "*.DS_Store" "*.venv*" ".vscode*"
