@@ -36,14 +36,14 @@ jobs:
           git fetch --tags
           git tag --list
 
-      - name: Move Release File
-        run: |
-          mv plugin.video.skipintro-*.zip release/
-
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: release/plugin.video.skipintro-*.zip
+          files: plugin.video.skipintro-*.zip
           tag_name: v${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Move Release File
+        run: |
+          mv plugin.video.skipintro-*.zip release/
