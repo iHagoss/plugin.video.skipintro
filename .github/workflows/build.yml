@@ -24,6 +24,21 @@ jobs:
           chmod +x build.sh
           ./build.sh
 
+      - name: Create Add-on Zip
+        run: |
+          # Command to create or update plugin.video.skipintro-*.zip
+          zip -r plugin.video.skipintro-1.2.5.zip .
+
+      - name: Update Repository XML
+        run: |
+          # Command to update repository.plugin.video.skipintro.xml
+          echo "Update repository XML with the latest version info"
+
+      - name: Create Repository Zip
+        run: |
+          # Command to create repository.plugin.video.skipintro.zip
+          zip -r repository.plugin.video.skipintro.zip repository.plugin.video.skipintro.xml
+
       - name: Create Tag
         id: tag
         run: |
@@ -45,12 +60,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Move Release File
+      - name: Move Release Files
         run: |
           mv plugin.video.skipintro-*.zip release/
+          mv repository.plugin.video.skipintro.zip release/
 
       - name: Commit and Push Changes
         run: |
-          git add release/plugin.video.skipintro-*.zip
-          git commit -m "Move release file to release directory [skip ci]"
+          git add release/plugin.video.skipintro-*.zip release/repository.plugin.video.skipintro.zip
+          git commit -m "Update release files [skip ci]"
           git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/amgadabdelhafez/plugin.video.skipintro.git master
