@@ -1,0 +1,3 @@
+# Exclude virtual environment and VSCode settings
+.venv/
+.vscode/

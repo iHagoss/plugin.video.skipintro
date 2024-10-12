@@ -1,0 +1,17 @@
+<addon id="plugin.video.skipintro"
+       name="Skip Intro Addon"
+       version="1.1.5"
+       provider-name="Amgad Abdelhafez">
+    <requires>
+        <import addon="xbmc.python" version="3.0.0"/>
+    </requires>
+
+    <extension point="xbmc.service" library="default.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en">Skip intros by detecting bookmarks, subtitles, or fixed delay.</summary>
+        <description lang="en">This add-on reads bookmarks, subtitles, or prompts after a configurable delay to skip intros during playback.</description>
+        <platform>all</platform>
+    </extension>
+</addon>

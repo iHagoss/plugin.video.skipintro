@@ -1,0 +1,26 @@
+# avformat_find_stream_info
+Open - avformat_find_stream_info starting
+Open - av_find_stream_info finished
+Input #0, matroska,webm, from 'https://lax3-4.download.real-debrid.com/d/DAAWYVUXSQXK222/Friends.S04E04.The.One.with.the.Ballroom.Dancing.2160p.MAX.WEB-DL.DDP5.1.DV.HDR.H.265-XEBEC.mkv':
+Metadata:
+encoder         : libebml v1.4.5 + libmatroska v1.7.1
+
+# Chapters
+Duration: 00:22:12.64, start: 0.000000, bitrate: 22469 kb/s
+Chapters:
+Chapter #0:0: start 0.000000, end 119.619000
+Metadata:
+title: Start
+Chapter #0:1: start 119.619000, end 165.040000
+Metadata:
+title: Intro
+Chapter #0:2: start 165.040000, end 1322.321000
+Metadata:
+title: Intro End
+Chapter #0:3: start 1322.321000, end 1322.738000
+Metadata:
+title: Credits Starting
+Chapter #0:4: start 1322.738000, end 1332.640000
+Metadata:
+title: End Credits
+Stream #0:0: Video: hevc (Main 10), yuv420p10le(tv, bt2020nc/bt2020/smpte2084), 3840x2160 [SAR 1:1 DAR 16:9], 23.98 fps, 23.98 tbr, 1k tbn (default) (original)

@@ -1,0 +1,14 @@
+<addons>
+    <addon id="plugin.video.skipintro" version="1.1.6" name="Skip Intro Addon">
+        <extension point="xbmc.addon.metadata">
+            <summary lang="en">Skip intros by detecting bookmarks, subtitles, or fixed delay.</summary>
+            <description lang="en">This add-on reads bookmarks, subtitles, or prompts after a configurable delay to skip intros during playback.</description>
+            <platform>all</platform>
+        </extension>
+        <assets>
+            <icon>https://github.com/yourusername/yourrepo/raw/main/icon.png</icon>
+            <fanart>https://github.com/yourusername/yourrepo/raw/main/fanart.jpg</fanart>
+        </assets>
+        <download>https://github.com/yourusername/yourrepo/releases/download/v1.1.6/plugin.video.skipintro-1.1.6.zip</download>
+    </addon>
+</addons>
