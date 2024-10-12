@@ -12,7 +12,7 @@ The Skip Intro Addon for Kodi allows users to automatically skip intros by detec
 
 1. **Download the Addon:**
 
-   - Go to the [Releases](https://github.com/yourusername/yourrepo/releases) section of the GitHub repository.
+   - Go to the [Releases](https://github.com/amgadabdelhafez/plugin.video.skipintro/releases) section of the GitHub repository.
    - Download the latest release zip file of the addon.
 
 2. **Install the Addon in Kodi:**

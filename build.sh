@@ -30,6 +30,10 @@ echo "Updated version from $CURRENT_VERSION to $NEW_VERSION"
 # Compress the project folder into a zip file, excluding .venv and .vscode directories
 ZIP_FILE="plugin.video.skipintro-$NEW_VERSION.zip"
 zip -r $ZIP_FILE . -x "*.git*" "*.DS_Store" "*.venv*" ".vscode*"
-mv $ZIP_FILE ..
+
+# Create a zip file for the repository addon
+REPO_ZIP="release/repository.plugin.video.skipintro.zip"
+zip -r $REPO_ZIP release/repository.plugin.video.skipintro.xml
+
 # Log the completion
-echo "Compressed the project into $ZIP_FILE"
+echo "Compressed the project into $ZIP_FILE and repository into $REPO_ZIP"
