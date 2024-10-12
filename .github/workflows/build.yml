@@ -31,6 +31,11 @@ jobs:
           git tag -a v${{ github.run_number }} -m "Release v${{ github.run_number }}"
           git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/amgadabdelhafez/plugin.video.skipintro.git v${{ github.run_number }}
 
+      - name: Verify Tag
+        run: |
+          git fetch --tags
+          git tag --list
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
