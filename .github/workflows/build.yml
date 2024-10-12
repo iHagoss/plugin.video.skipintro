@@ -27,7 +27,7 @@ jobs:
         id: tag
         run: |
           git config --global user.email "amgad@yahoo.com"
-          git config --global user.name "Amgad Abdelhafez"
+          git config --global user.name "amgadabdelhafez"
           git tag -a v${{ github.run_number }} -m "Release v${{ github.run_number }}"
           git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/amgadabdelhafez/plugin.video.skipintro.git v${{ github.run_number }}
 
