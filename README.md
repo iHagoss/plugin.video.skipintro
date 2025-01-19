@@ -1,45 +1,256 @@
 # Skip Intro Addon
 
-The Skip Intro Addon for Kodi allows users to automatically skip intros by detecting bookmarks, subtitles, or using a fixed delay.
+The Skip Intro Addon for Kodi intelligently detects, remembers, and skips TV show intros using multiple detection methods and a smart database system.
 
 ## Features
 
-- Automatically detects and skips intros in videos.
-- Configurable delay for skipping intros.
-- Supports multiple detection methods including bookmarks and subtitles.
+- **Smart Show Detection**
+
+  - Automatically identifies TV shows and episodes
+  - Works with both Kodi metadata and filename parsing
+  - Supports common naming formats (SxxExx, xxXxx)
+
+- **Intro/Outro Management**
+
+  - Saves intro/outro times for each episode
+  - Reuses saved times for future playback
+  - Multiple detection methods:
+    - Database of saved times
+    - Chapter markers
+    - Configurable default timing
+    - Online API support (coming soon)
+
+- **User-Friendly Settings**
+
+  - Configurable delay and skip duration
+  - Database location customization
+  - Toggle different detection methods
+  - Option to save detected times
+  - Show-level default times
+
+- **Technical Features**
+  - SQLite database for efficient storage
+  - Smart duration parsing (HH:MM:SS, MM:SS)
+  - Comprehensive error handling
+  - Detailed logging
+  - Full localization support
 
 ## Installation
 
 1. **Download the Addon:**
 
-   - Go to the [Releases](https://github.com/amgadabdelhafez/plugin.video.skipintro/releases) section of the GitHub repository.
-   - Download the latest release zip file of the addon.
+   - Go to the [Releases](https://github.com/amgadabdelhafez/plugin.video.skipintro/releases) section
+   - Download the latest release zip file
 
-2. **Install the Addon in Kodi:**
+2. **Install in Kodi:**
 
-   - Open Kodi and go to the "Add-ons" section.
-   - Click on the "Package" icon in the top-left corner.
-   - Select "Install from zip file."
-   - Navigate to the location where you downloaded the zip file and select it.
-   - Kodi will install the addon from the zip file.
+   - Open Kodi > Add-ons
+   - Click the "Package" icon (top-left)
+   - Select "Install from zip file"
+   - Navigate to the downloaded zip file
+   - Wait for installation confirmation
 
 3. **Enable the Addon:**
-   - After installation, go to "My add-ons" in Kodi.
-   - Find the Skip Intro Addon in the list and ensure it is enabled.
+   - Go to Settings > Add-ons
+   - Find "Skip Intro" under Video Add-ons
+   - Enable the addon
+
+## Configuration
+
+The addon provides three categories of settings:
+
+1. **Intro Skipping Settings**
+
+   - **Delay Before Prompt** (0-300 seconds)
+     - How long to wait before showing the skip prompt
+     - Default: 30 seconds
+   - **Skip Duration** (10-300 seconds)
+     - How far forward to skip when using default skip
+     - Default: 60 seconds
+
+2. **Database Settings**
+
+   - **Database Location**
+     - Where to store the show database
+     - Default: special://userdata/addon_data/plugin.video.skipintro/shows.db
+   - **Use Chapter Markers**
+     - Enable/disable chapter-based detection
+     - Default: Enabled
+   - **Use Online API**
+     - Enable/disable online time source (coming soon)
+     - Default: Disabled
+   - **Save Times**
+     - Whether to save detected times for future use
+     - Default: Enabled
+
+3. **Show Settings**
+   - **Use Show Defaults**
+     - Use the same intro/outro times for all episodes
+     - Default: Enabled
+   - **Use Chapter Numbers**
+     - Use chapter numbers instead of timestamps
+     - Default: Disabled
+   - **Default Intro Duration**
+     - Duration of intro when using show defaults
+     - Default: 60 seconds
+
+## How It Works
+
+The addon uses multiple methods to detect and skip intros:
+
+1. **Database Lookup:**
+
+   - Identifies current show and episode
+   - Checks database for saved times
+   - Uses saved times if available
+
+2. **Chapter Detection:**
+
+   - Looks for chapters named "Intro End"
+   - When found, offers to skip to that point
+   - Can save times for future use
+
+3. **Manual Input:**
+
+   There are two ways to access the time input feature:
+
+   1. Through Skip Intro Prompt:
+
+      - When the skip prompt appears, select "Set Times"
+      - Choose chapters or enter manual times
+      - Times are saved for future playback
+
+   2. Through Library Context Menu:
+      - In Kodi's TV show library, select a show or episode
+      - Press 'C' or right-click to open context menu
+      - Select "Set Show Times"
+      - If the file has chapters:
+        - Select chapters for intro start/end
+        - Select chapter for outro start (optional)
+        - Times are saved automatically
+      * If no chapters available:
+        - Enter intro start time and duration
+        - Enter outro start time (optional)
+        - Choose whether to use for all episodes
+
+   When setting times, if chapters are available:
+
+   - You'll be prompted to select chapters for:
+     - Intro Start: Where the intro begins
+     - Intro End: Where the intro finishes
+     - Outro Start: Where the end credits begin
+   - Chapter names and timestamps are shown
+   - Selecting chapters automatically sets the times
+
+   If no chapters are available, or if you prefer manual input:
+
+   - Enter times in MM:SS format for:
+     - Intro Start Time
+     - Intro Duration
+     - Outro Start Time (optional)
+   - Choose whether to use these times for all episodes
+
+   All times are saved in the database and used for future playback of the show.
+
+4. **Default Skip:**
+
+   - Falls back to configured delay if no other times found
+   - Shows skip prompt after delay time
+   - Option to save user-confirmed times
+
+5. **Online API** (Coming Soon):
+   - Will fetch intro/outro times from online database
+   - Requires API key (not yet implemented)
 
 ## Repository Setup
 
-To enable automatic updates, add the repository to Kodi:
+To enable automatic updates:
 
-1. **Add the Repository:**
-   - In Kodi, go to "Add-ons" and click on the "Package" icon.
-   - Select "Install from zip file" and navigate to the location where you have the `repository.plugin.video.skipintro.xml` file.
-   - Once added, Kodi will use this repository to check for updates to your addon.
+1. **Add Repository:**
+
+   - In Kodi > Add-ons > Package icon
+   - Select "Install from zip file"
+   - Navigate to `repository.plugin.video.skipintro.zip`
+   - Wait for installation
+
+2. **Updates:**
+   - Kodi will automatically check for updates
+   - Install updates through Kodi's addon manager
+
+## Development
+
+### Requirements
+
+- Python 3.x
+- Kodi 19 (Matrix) or newer
+
+### Testing
+
+The addon includes comprehensive unit tests:
+
+```bash
+python3 test_video_metadata.py -v
+```
+
+### Building
+
+Use the included build script:
+
+```bash
+./build.sh
+```
+
+This will:
+
+- Create addon zip file
+- Generate repository files
+- Update version information
+
+### Project Structure
+
+```
+plugin.video.skipintro/
+├── addon.xml           # Addon metadata and dependencies
+├── default.py         # Main addon code
+├── resources/
+│   ├── lib/
+│   │   ├── database.py   # Database operations
+│   │   └── metadata.py   # Show detection
+│   ├── settings.xml   # Settings definition
+│   └── language/      # Localization files
+├── tests/             # Unit tests
+└── build.sh          # Build script
+```
 
 ## Contributing
 
-Contributions are welcome! Please fork the repository and submit a pull request for any improvements or bug fixes.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add/update tests
+5. Submit a pull request
 
 ## License
 
 This project is licensed under the MIT License.
+
+## Changelog
+
+### v1.3.0
+
+- Added show-level default times
+- Added duration-based skipping
+- Added chapter number support
+- Improved database persistence
+- Better chapter name handling
+- Fixed timing issues during playback
+- Updated documentation
+
+### v1.2.93
+
+- Added HH:MM:SS duration parsing
+- Improved settings with sliders and validation
+- Added comprehensive error handling
+- Added localization support
+- Improved memory management
+- Added unit tests

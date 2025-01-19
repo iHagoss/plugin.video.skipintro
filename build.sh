@@ -1,42 +1,98 @@
 #!/bin/bash
 
-# Path to the addon.xml file
-ADDON_XML="addon.xml"
+# Exit on error
+set -e
 
-# Extract the current version using a more robust method
-CURRENT_VERSION=$(grep -o 'version="[0-9]\+\.[0-9]\+\.[0-9]\+"' $ADDON_XML | sed 's/version="//' | sed 's/"//')
+echo "Building Skip Intro addon..."
 
-# Check if the version was extracted successfully
-if [ -z "$CURRENT_VERSION" ]; then
-  echo "Failed to extract the current version from addon.xml"
-  exit 1
+# Get current version from addon.xml
+VERSION=$(grep -oP 'version="\K[^"]+' addon.xml)
+echo "Current version: $VERSION"
+
+# Check version consistency in README
+README_VERSION=$(grep -oP '### v\K[0-9.]+' README.md | head -1)
+if [ "$VERSION" != "$README_VERSION" ]; then
+    echo "Error: Version mismatch!"
+    echo "addon.xml: $VERSION"
+    echo "README.md: $README_VERSION"
+    exit 1
 fi
 
-# Split the version into components
-IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
+echo "Version consistency check passed"
 
-# Increment the minor version
-VERSION_PARTS[1]=$((VERSION_PARTS[1] + 1))
+# Create release directory if it doesn't exist
+mkdir -p release
 
-# Construct the new version string
-NEW_VERSION="${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.${VERSION_PARTS[2]}"
+# Clean up old files
+rm -f release/plugin.video.skipintro-*.zip
+rm -f release/repository.plugin.video.skipintro.xml
+rm -f release/repository.plugin.video.skipintro.zip
 
-# Update the version in addon.xml
-sed -i '' "s/version=\"$CURRENT_VERSION\"/version=\"$NEW_VERSION\"/" $ADDON_XML
+# Create temporary build directory
+BUILD_DIR=$(mktemp -d)
+ADDON_DIR="$BUILD_DIR/plugin.video.skipintro"
 
-# Log the version update
-echo "Updated version from $CURRENT_VERSION to $NEW_VERSION"
+# Create addon directory structure
+mkdir -p "$ADDON_DIR/resources/language/resource.language.en_gb"
 
-# Output the new version for GitHub Actions
-echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+# Copy files
+cp addon.xml "$ADDON_DIR/"
+cp default.py "$ADDON_DIR/"
+cp README.md "$ADDON_DIR/"
+cp resources/settings.xml "$ADDON_DIR/resources/"
+cp resources/language/resource.language.en_gb/strings.po "$ADDON_DIR/resources/language/resource.language.en_gb/"
 
-# Compress the project folder into a zip file, excluding .venv and .vscode directories
-ZIP_FILE="plugin.video.skipintro-$NEW_VERSION.zip"
-zip -r $ZIP_FILE . -x "*.git*" "*.DS_Store" "*.venv*" ".vscode*"
+# Create zip file
+cd "$BUILD_DIR"
+zip -r "../release/plugin.video.skipintro-$VERSION.zip" "plugin.video.skipintro"
+cd -
 
-# Create a zip file for the repository addon
-REPO_ZIP="release/repository.plugin.video.skipintro.zip"
-zip -r $REPO_ZIP release/repository.plugin.video.skipintro.xml
+# Create addons.xml
+cat > release/addons.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<addons>
+    $(cat addon.xml)
+</addons>
+EOF
 
-# Log the completion
-echo "Compressed the project into $ZIP_FILE and repository into $REPO_ZIP"
+# Generate MD5
+cd release
+md5sum addons.xml > addons.xml.md5
+cd -
+
+# Create repository XML
+cat > release/repository.plugin.video.skipintro.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="repository.plugin.video.skipintro" 
+       name="Skip Intro Repository" 
+       version="$VERSION" 
+       provider-name="Amgad Abdelhafez">
+    <extension point="xbmc.addon.repository" name="Skip Intro Repository">
+        <info compressed="false">https://github.com/amgadabdelhafez/plugin.video.skipintro/raw/main/repository.xml</info>
+        <checksum>https://github.com/amgadabdelhafez/plugin.video.skipintro/raw/main/repository.md5</checksum>
+        <datadir zip="true">https://github.com/amgadabdelhafez/plugin.video.skipintro/raw/main/</datadir>
+        <assets>
+            <icon>https://github.com/amgadabdelhafez/plugin.video.skipintro/raw/main/icon.png</icon>
+            <fanart>https://github.com/amgadabdelhafez/plugin.video.skipintro/raw/main/fanart.jpg</fanart>
+        </assets>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en">Repository for Skip Intro Addon</summary>
+        <description lang="en">This repository provides updates for the Skip Intro Addon.</description>
+        <platform>all</platform>
+    </extension>
+</addon>
+EOF
+
+# Create repository zip
+cd release
+zip -r repository.plugin.video.skipintro.zip repository.plugin.video.skipintro.xml
+cd -
+
+# Clean up
+rm -rf "$BUILD_DIR"
+
+echo "Build complete!"
+echo "Created: release/plugin.video.skipintro-$VERSION.zip"
+echo "Created: release/repository.plugin.video.skipintro.xml"
+echo "Created: release/repository.plugin.video.skipintro.zip"
