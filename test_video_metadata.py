@@ -143,20 +143,16 @@ class TestSkipIntro(unittest.TestCase):
     def setUp(self):
         self.player = default.SkipIntroPlayer()
         
-    def test_parse_duration_mmss(self):
-        """Test parsing MM:SS format duration"""
-        duration = self.player.parse_duration("05:30")
-        self.assertEqual(duration, 330)  # 5 minutes 30 seconds = 330 seconds
-
-    def test_parse_duration_hhmmss(self):
-        """Test parsing HH:MM:SS format duration"""
-        duration = self.player.parse_duration("01:05:30")
-        self.assertEqual(duration, 3930)  # 1 hour 5 minutes 30 seconds = 3930 seconds
-
-    def test_parse_duration_invalid(self):
-        """Test parsing invalid duration format"""
-        duration = self.player.parse_duration("invalid")
-        self.assertIsNone(duration)
+    def test_duration_parsing(self):
+        """Test duration parsing in various formats"""
+        # Test MM:SS format
+        self.assertEqual(self.player.parse_duration("05:30"), 330)
+        
+        # Test HH:MM:SS format
+        self.assertEqual(self.player.parse_duration("01:05:30"), 3930)
+        
+        # Test invalid format
+        self.assertIsNone(self.player.parse_duration("invalid"))
 
     def test_validate_settings(self):
         """Test settings validation"""

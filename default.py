@@ -157,13 +157,9 @@ class SkipIntroPlayer(xbmc.Player):
                 xbmc.log(f'SkipIntro: Using show chapter config: {config}', xbmc.LOGINFO)
                 chapters = self.getChapters()
                 if chapters:
-                    xbmc.log(f'SkipIntro: Processing show chapter config with {len(chapters)} chapters', xbmc.LOGINFO)
-                    for i, chapter in enumerate(chapters):
-                        xbmc.log(f'SkipIntro: Chapter {i+1}: {chapter["name"]} at {chapter["time"]}s', xbmc.LOGINFO)
-                    
                     intro_chapter = config.get('intro_start_chapter')
                     outro_chapter = config.get('outro_start_chapter')
-                    xbmc.log(f'SkipIntro: Show config has intro_chapter={intro_chapter}, outro_chapter={outro_chapter}', xbmc.LOGINFO)
+                    xbmc.log(f'SkipIntro: Processing chapters - total={len(chapters)}, intro={intro_chapter}, outro={outro_chapter}', xbmc.LOGINFO)
                     
                     if intro_chapter:
                         if process_chapter_times(intro_chapter, chapters, "show chapter config"):

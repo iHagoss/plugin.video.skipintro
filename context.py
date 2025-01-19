@@ -89,14 +89,15 @@ def get_manual_times(show_id, db):
             
         outro_start = dialog.numeric(2, 'Enter Outro Start Time (MM:SS) (Optional)')
         
-        # Convert MM:SS to seconds
+        # Convert MM:SS to seconds using built-in time parsing
         def time_to_seconds(time_str):
             if not time_str:
                 return None
-            parts = time_str.split(':')
-            if len(parts) == 2:
-                return int(parts[0]) * 60 + int(parts[1])
-            return None
+            try:
+                parts = time_str.split(':')
+                return int(parts[0]) * 60 + int(parts[1]) if len(parts) == 2 else None
+            except (ValueError, IndexError):
+                return None
             
         # Ask if these times should be used for all episodes
         use_defaults = dialog.yesno('Skip Intro', 'Use these times for all episodes of this show?')
