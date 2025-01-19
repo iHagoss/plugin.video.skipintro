@@ -1,19 +1,43 @@
 import xbmc
 
 class ChapterManager:
+    def __init__(self):
+        self._cached_chapters = None
+        self._last_file = None
+
     @staticmethod
-    def get_chapters():
-        """Get chapter information using multiple methods"""
+    def _parse_time(time_str):
+        """Parse HH:MM:SS time string to seconds"""
         try:
-            chapters = []
+            if time_str and ':' in time_str:
+                parts = time_str.split(':')
+                if len(parts) == 3:
+                    hours, minutes, seconds = map(int, parts)
+                    return hours * 3600 + minutes * 60 + seconds
+        except (ValueError, IndexError) as e:
+            xbmc.log(f'SkipIntro: Error parsing time {time_str}: {str(e)}', xbmc.LOGWARNING)
+        return None
+
+    def get_chapters(self):
+        """Get chapter information using multiple methods with caching"""
+        try:
             player = xbmc.Player()
+            if not player.isPlaying():
+                return []
+
+            current_file = player.getPlayingFile()
+            if self._cached_chapters and current_file == self._last_file:
+                xbmc.log('SkipIntro: Using cached chapter info', xbmc.LOGDEBUG)
+                return self._cached_chapters
+
+            chapters = []
+            self._last_file = current_file
             
             # Try getting chapter count from both methods
             chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
-            player_chapter_count = player.getTotalChapters() if player.isPlaying() else 0
+            player_chapter_count = player.getTotalChapters()
             
-            xbmc.log(f'SkipIntro: Raw chapter count from InfoLabel: {chapter_count_str}', xbmc.LOGDEBUG)
-            xbmc.log(f'SkipIntro: Raw chapter count from Player: {player_chapter_count}', xbmc.LOGDEBUG)
+            xbmc.log(f'SkipIntro: Chapter counts - InfoLabel: {chapter_count_str}, Player API: {player_chapter_count}', xbmc.LOGINFO)
             
             # Use the larger of the two counts
             try:
@@ -21,6 +45,7 @@ class ChapterManager:
                 chapter_count = max(info_chapter_count, player_chapter_count)
             except (ValueError, TypeError):
                 chapter_count = player_chapter_count
+                xbmc.log('SkipIntro: Using Player API chapter count', xbmc.LOGINFO)
                 
             if chapter_count <= 0:
                 xbmc.log('SkipIntro: No chapters found', xbmc.LOGWARNING)
@@ -31,41 +56,35 @@ class ChapterManager:
                     # Get chapter name and time from InfoLabels
                     chapter_name = xbmc.getInfoLabel(f'VideoPlayer.ChapterName({i})')
                     time_str = xbmc.getInfoLabel(f'VideoPlayer.ChapterTime({i})')
+                    method_used = 'InfoLabel'
                     
                     # Fallback to player method if InfoLabel fails
-                    if not time_str and player.isPlaying():
+                    if not time_str:
                         try:
                             player.seekChapter(i)
                             time_str = xbmc.getInfoLabel('VideoPlayer.Time')
-                        except:
-                            pass
+                            method_used = 'Player API'
+                        except Exception as e:
+                            xbmc.log(f'SkipIntro: Player API fallback failed: {str(e)}', xbmc.LOGWARNING)
+                            continue
                             
                     if not chapter_name or chapter_name.isspace():
                         chapter_name = f'Chapter {i}'
                         
-                    xbmc.log(f'SkipIntro: Raw chapter {i} time: {time_str}', xbmc.LOGDEBUG)
-                    
-                    if time_str and ':' in time_str:
-                        parts = time_str.split(':')
-                        if len(parts) == 3:
-                            hours, minutes, seconds = map(int, parts)
-                            chapter_time = hours * 3600 + minutes * 60 + seconds
-                            chapters.append({
-                                'name': chapter_name,
-                                'time': chapter_time
-                            })
-                            xbmc.log(f'SkipIntro: Added chapter {i}: {chapter_name} at {chapter_time}s', 
-                                    xbmc.LOGINFO)
-                        else:
-                            xbmc.log(f'SkipIntro: Invalid time format for chapter {i}: {time_str}', 
-                                    xbmc.LOGWARNING)
-                    else:
-                        xbmc.log(f'SkipIntro: No time available for chapter {i}', xbmc.LOGWARNING)
-                        
+                    chapter_time = self._parse_time(time_str)
+                    if chapter_time is not None:
+                        chapters.append({
+                            'name': chapter_name,
+                            'time': chapter_time,
+                            'number': i
+                        })
+                        xbmc.log(f'SkipIntro: Added chapter {i} ({method_used}): {chapter_name} at {chapter_time}s', 
+                                xbmc.LOGINFO)
                 except Exception as e:
                     xbmc.log(f'SkipIntro: Error processing chapter {i}: {str(e)}', xbmc.LOGWARNING)
                     continue
-                    
+            
+            self._cached_chapters = chapters
             return chapters
         except Exception as e:
             xbmc.log(f'SkipIntro: Error getting chapters: {str(e)}', xbmc.LOGERROR)
