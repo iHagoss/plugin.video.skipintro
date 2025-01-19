@@ -33,14 +33,26 @@ class ChapterManager:
             chapters = []
             self._last_file = current_file
             
-            # Get chapter count from InfoLabel
+            # Try different methods to get chapter count
             chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
-            xbmc.log(f'SkipIntro: Chapter count from InfoLabel: "{chapter_count_str}"', xbmc.LOGINFO)
+            xbmc.log(f'SkipIntro: Raw chapter count InfoLabel: "{chapter_count_str}"', xbmc.LOGINFO)
+            
+            # Handle case where InfoLabel returns its own name
+            if chapter_count_str == 'VideoPlayer.ChapterCount':
+                xbmc.log('SkipIntro: InfoLabel not ready yet, waiting...', xbmc.LOGINFO)
+                xbmc.sleep(1000)  # Wait a second
+                chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
+                xbmc.log(f'SkipIntro: Retry chapter count InfoLabel: "{chapter_count_str}"', xbmc.LOGINFO)
             
             try:
-                chapter_count = int(chapter_count_str) if chapter_count_str else 0
-            except (ValueError, TypeError):
-                xbmc.log('SkipIntro: Invalid chapter count format', xbmc.LOGWARNING)
+                if chapter_count_str and chapter_count_str != 'VideoPlayer.ChapterCount':
+                    chapter_count = int(chapter_count_str)
+                    xbmc.log(f'SkipIntro: Valid chapter count: {chapter_count}', xbmc.LOGINFO)
+                else:
+                    xbmc.log('SkipIntro: No valid chapter count available', xbmc.LOGWARNING)
+                    chapter_count = 0
+            except (ValueError, TypeError) as e:
+                xbmc.log(f'SkipIntro: Invalid chapter count format: {str(e)}', xbmc.LOGWARNING)
                 chapter_count = 0
                 
             if chapter_count <= 0:
