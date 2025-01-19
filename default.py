@@ -260,10 +260,12 @@ class SkipIntroPlayer(xbmc.Player):
             self.bookmarks_checked = True
 
     def getChapters(self):
-        return ChapterManager.get_chapters()
+        chapter_manager = ChapterManager()
+        return chapter_manager.get_chapters()
 
     def find_intro_chapter(self, chapters):
-        return ChapterManager.find_intro_chapter(chapters)
+        chapter_manager = ChapterManager()
+        return chapter_manager.find_intro_chapter(chapters)
 
     def check_for_default_skip(self):
         xbmc.log('SkipIntro: Checking for default skip', xbmc.LOGDEBUG)
