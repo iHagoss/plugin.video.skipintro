@@ -1,11 +1,14 @@
 import xbmc
 import xbmcaddon
+import xbmcgui
 import xbmcvfs
 import os
 from resources.lib.settings import Settings
 from resources.lib.chapters import ChapterManager
 from resources.lib.ui import PlayerUI
 from resources.lib.show import ShowManager
+from resources.lib.database import ShowDatabase
+from resources.lib.metadata import ShowMetadata
 
 # Log statement to verify script execution and capture import errors
 try:
