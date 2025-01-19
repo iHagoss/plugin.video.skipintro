@@ -81,11 +81,11 @@ class SkipIntroPlayer(xbmc.Player):
         self.prompt_shown = False
         self.default_skip_checked = False
         
-        # Wait for video info and chapters to be available
-        xbmc.sleep(1000)
+        # Wait longer for video info and chapters to be available
+        xbmc.sleep(3000)  # Initial 3 second wait
         self.detect_show()
-        # Wait a bit more for chapters
-        xbmc.sleep(500)
+        # Additional wait for chapters
+        xbmc.sleep(2000)  # 2 more seconds
         if self.show_info:
             # First check saved times
             self.check_saved_times()

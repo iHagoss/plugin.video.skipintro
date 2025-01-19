@@ -33,16 +33,31 @@ class ChapterManager:
             chapters = []
             self._last_file = current_file
             
-            # Try different methods to get chapter count
-            chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
-            xbmc.log(f'SkipIntro: Raw chapter count InfoLabel: "{chapter_count_str}"', xbmc.LOGINFO)
+            # Try different methods to get chapter count with multiple retries
+            max_retries = 5
+            retry_delay = 2000  # 2 seconds
             
-            # Handle case where InfoLabel returns its own name
-            if chapter_count_str == 'VideoPlayer.ChapterCount':
-                xbmc.log('SkipIntro: InfoLabel not ready yet, waiting...', xbmc.LOGINFO)
-                xbmc.sleep(1000)  # Wait a second
+            for attempt in range(max_retries):
+                # Method 1: VideoPlayer.ChapterCount
                 chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
-                xbmc.log(f'SkipIntro: Retry chapter count InfoLabel: "{chapter_count_str}"', xbmc.LOGINFO)
+                xbmc.log(f'SkipIntro: Attempt {attempt + 1}/{max_retries} - ChapterCount: "{chapter_count_str}"', xbmc.LOGINFO)
+                
+                # Method 2: Check individual chapters until we find none
+                if chapter_count_str == 'VideoPlayer.ChapterCount' or not chapter_count_str:
+                    xbmc.log(f'SkipIntro: Trying manual chapter detection', xbmc.LOGINFO)
+                    for i in range(1, 20):  # Check up to 20 chapters
+                        name = xbmc.getInfoLabel(f'VideoPlayer.Chapter({i})')
+                        if name and name != f'VideoPlayer.Chapter({i})':
+                            chapter_count_str = str(i)
+                            xbmc.log(f'SkipIntro: Found chapter {i}: {name}', xbmc.LOGINFO)
+                            break
+                
+                if chapter_count_str and chapter_count_str != 'VideoPlayer.ChapterCount':
+                    xbmc.log(f'SkipIntro: Valid chapter count found: {chapter_count_str}', xbmc.LOGINFO)
+                    break
+                    
+                xbmc.log(f'SkipIntro: No valid chapter count yet, waiting {retry_delay/1000}s...', xbmc.LOGINFO)
+                xbmc.sleep(retry_delay)
             
             try:
                 if chapter_count_str and chapter_count_str != 'VideoPlayer.ChapterCount':
