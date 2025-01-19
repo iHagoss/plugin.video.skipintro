@@ -116,7 +116,20 @@ class TestMetadata(unittest.TestCase):
         self.assertEqual(info['title'], 'Test Show')
         self.assertEqual(info['season'], 1)
         self.assertEqual(info['episode'], 2)
-    
+
+    def test_chapters(self):
+        """Test chapter detection"""
+        # Test getting chapters
+        chapters = self.metadata.get_chapters()
+        if chapters:
+            self.assertIsInstance(chapters, list)
+            for chapter in chapters:
+                self.assertIn('number', chapter)
+                self.assertIn('name', chapter)
+                self.assertIn('time', chapter)
+        else:
+            self.assertIsNone(chapters)
+
     def test_show_detection_filename(self):
         """Test show detection from filename"""
         # Mock Kodi info labels to return None
