@@ -6,6 +6,8 @@ import os
 import json
 from resources.lib.database import ShowDatabase
 from resources.lib.metadata import ShowMetadata
+from resources.lib.settings import Settings
+from resources.lib.chapters import ChapterManager
 
 # Log statement to verify script execution and capture import errors
 try:
@@ -36,46 +38,6 @@ def get_database():
         xbmc.log('SkipIntro: Error initializing database: {}'.format(str(e)), xbmc.LOGERROR)
         return None
 
-def validate_settings():
-    """Validate and sanitize addon settings"""
-    try:
-        default_delay = int(addon.getSetting('default_delay'))
-        skip_duration = int(addon.getSetting('skip_duration'))
-        use_chapters = addon.getSettingBool('use_chapters')
-        use_api = addon.getSettingBool('use_api')
-        save_times = addon.getSettingBool('save_times')
-        
-        # Ensure values are within reasonable bounds
-        if default_delay < 0:
-            default_delay = 30
-            addon.setSetting('default_delay', '30')
-        elif default_delay > 300:  # Max 5 minutes
-            default_delay = 300
-            addon.setSetting('default_delay', '300')
-            
-        if skip_duration < 10:  # Min 10 seconds
-            skip_duration = 60
-            addon.setSetting('skip_duration', '60')
-        elif skip_duration > 300:  # Max 5 minutes
-            skip_duration = 300
-            addon.setSetting('skip_duration', '300')
-            
-        return {
-            'default_delay': default_delay,
-            'skip_duration': skip_duration,
-            'use_chapters': use_chapters,
-            'use_api': use_api,
-            'save_times': save_times
-        }
-    except ValueError as e:
-        xbmc.log('SkipIntro: Error reading settings: {} - using defaults'.format(str(e)), xbmc.LOGERROR)
-        return {
-            'default_delay': 30,
-            'skip_duration': 60,
-            'use_chapters': True,
-            'use_api': False,
-            'save_times': True
-        }
 
 class SkipIntroPlayer(xbmc.Player):
     def __init__(self):
@@ -92,8 +54,9 @@ class SkipIntroPlayer(xbmc.Player):
         self.db = get_database()
         self.metadata = ShowMetadata()
         
-        # Read and validate settings
-        self.settings = validate_settings()
+        # Initialize settings
+        self.settings_manager = Settings()
+        self.settings = self.settings_manager.settings
         xbmc.log('SkipIntro: Initialized with settings: {}'.format(self.settings), xbmc.LOGDEBUG)
         
     def onPlayBackStarted(self):
