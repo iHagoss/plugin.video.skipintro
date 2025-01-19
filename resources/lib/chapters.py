@@ -3,36 +3,49 @@ import xbmc
 class ChapterManager:
     @staticmethod
     def get_chapters():
-        """Get chapter information using SeekChapter"""
+        """Get chapter information using multiple methods"""
         try:
-            # Get total chapters - need to convert to string first
-            chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
-            xbmc.log(f'SkipIntro: Raw chapter count: {chapter_count_str}', xbmc.LOGDEBUG)
+            chapters = []
+            player = xbmc.Player()
             
+            # Try getting chapter count from both methods
+            chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
+            player_chapter_count = player.getTotalChapters() if player.isPlaying() else 0
+            
+            xbmc.log(f'SkipIntro: Raw chapter count from InfoLabel: {chapter_count_str}', xbmc.LOGDEBUG)
+            xbmc.log(f'SkipIntro: Raw chapter count from Player: {player_chapter_count}', xbmc.LOGDEBUG)
+            
+            # Use the larger of the two counts
             try:
-                chapter_count = int(chapter_count_str)
+                info_chapter_count = int(chapter_count_str)
+                chapter_count = max(info_chapter_count, player_chapter_count)
             except (ValueError, TypeError):
-                xbmc.log('SkipIntro: Invalid chapter count', xbmc.LOGWARNING)
-                return []
+                chapter_count = player_chapter_count
                 
             if chapter_count <= 0:
                 xbmc.log('SkipIntro: No chapters found', xbmc.LOGWARNING)
                 return []
                 
-            chapters = []
             for i in range(1, chapter_count + 1):
                 try:
-                    # Get chapter name and time
+                    # Get chapter name and time from InfoLabels
                     chapter_name = xbmc.getInfoLabel(f'VideoPlayer.ChapterName({i})')
+                    time_str = xbmc.getInfoLabel(f'VideoPlayer.ChapterTime({i})')
+                    
+                    # Fallback to player method if InfoLabel fails
+                    if not time_str and player.isPlaying():
+                        try:
+                            player.seekChapter(i)
+                            time_str = xbmc.getInfoLabel('VideoPlayer.Time')
+                        except:
+                            pass
+                            
                     if not chapter_name or chapter_name.isspace():
                         chapter_name = f'Chapter {i}'
                         
-                    # Get chapter time from ChapterTime property
-                    time_str = xbmc.getInfoLabel(f'VideoPlayer.ChapterTime({i})')
                     xbmc.log(f'SkipIntro: Raw chapter {i} time: {time_str}', xbmc.LOGDEBUG)
                     
                     if time_str and ':' in time_str:
-                        # Parse time string (format: HH:MM:SS)
                         parts = time_str.split(':')
                         if len(parts) == 3:
                             hours, minutes, seconds = map(int, parts)
@@ -44,13 +57,15 @@ class ChapterManager:
                             xbmc.log(f'SkipIntro: Added chapter {i}: {chapter_name} at {chapter_time}s', 
                                     xbmc.LOGINFO)
                         else:
-                            xbmc.log(f'SkipIntro: Invalid time format for chapter {i}: {time_str}', xbmc.LOGWARNING)
+                            xbmc.log(f'SkipIntro: Invalid time format for chapter {i}: {time_str}', 
+                                    xbmc.LOGWARNING)
                     else:
                         xbmc.log(f'SkipIntro: No time available for chapter {i}', xbmc.LOGWARNING)
+                        
                 except Exception as e:
                     xbmc.log(f'SkipIntro: Error processing chapter {i}: {str(e)}', xbmc.LOGWARNING)
                     continue
-            
+                    
             return chapters
         except Exception as e:
             xbmc.log(f'SkipIntro: Error getting chapters: {str(e)}', xbmc.LOGERROR)
