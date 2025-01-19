@@ -33,21 +33,15 @@ class ChapterManager:
             chapters = []
             self._last_file = current_file
             
-            # Try getting chapter count from both methods
+            # Get chapter count from InfoLabel
             chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
-            player_chapter_count = player.getTotalChapters()
+            xbmc.log(f'SkipIntro: Chapter count from InfoLabel: "{chapter_count_str}"', xbmc.LOGINFO)
             
-            xbmc.log(f'SkipIntro: Chapter detection methods:', xbmc.LOGINFO)
-            xbmc.log(f'SkipIntro: - InfoLabel ChapterCount: "{chapter_count_str}"', xbmc.LOGINFO)
-            xbmc.log(f'SkipIntro: - Player API getTotalChapters: {player_chapter_count}', xbmc.LOGINFO)
-            
-            # Use the larger of the two counts
             try:
-                info_chapter_count = int(chapter_count_str)
-                chapter_count = max(info_chapter_count, player_chapter_count)
+                chapter_count = int(chapter_count_str) if chapter_count_str else 0
             except (ValueError, TypeError):
-                chapter_count = player_chapter_count
-                xbmc.log('SkipIntro: Using Player API chapter count', xbmc.LOGINFO)
+                xbmc.log('SkipIntro: Invalid chapter count format', xbmc.LOGWARNING)
+                chapter_count = 0
                 
             if chapter_count <= 0:
                 xbmc.log('SkipIntro: No chapters found', xbmc.LOGWARNING)
