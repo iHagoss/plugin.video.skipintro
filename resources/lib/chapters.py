@@ -5,41 +5,51 @@ class ChapterManager:
     def get_chapters():
         """Get chapter information using SeekChapter"""
         try:
-            # Get total chapters
-            chapter_count = int(xbmc.getInfoLabel('VideoPlayer.ChapterCount'))
-            xbmc.log(f'SkipIntro: Total chapters found: {chapter_count}', xbmc.LOGDEBUG)
+            # Get total chapters - need to convert to string first
+            chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
+            xbmc.log(f'SkipIntro: Raw chapter count: {chapter_count_str}', xbmc.LOGDEBUG)
             
+            try:
+                chapter_count = int(chapter_count_str)
+            except (ValueError, TypeError):
+                xbmc.log('SkipIntro: Invalid chapter count', xbmc.LOGWARNING)
+                return []
+                
             if chapter_count <= 0:
                 xbmc.log('SkipIntro: No chapters found', xbmc.LOGWARNING)
                 return []
                 
             chapters = []
             for i in range(1, chapter_count + 1):
-                # Get chapter name and time
-                chapter_name = xbmc.getInfoLabel(f'VideoPlayer.ChapterName({i})')
-                if not chapter_name or chapter_name.isspace():
-                    chapter_name = f'Chapter {i}'
+                try:
+                    # Get chapter name and time
+                    chapter_name = xbmc.getInfoLabel(f'VideoPlayer.ChapterName({i})')
+                    if not chapter_name or chapter_name.isspace():
+                        chapter_name = f'Chapter {i}'
+                        
+                    # Get chapter time from ChapterTime property
+                    time_str = xbmc.getInfoLabel(f'VideoPlayer.ChapterTime({i})')
+                    xbmc.log(f'SkipIntro: Raw chapter {i} time: {time_str}', xbmc.LOGDEBUG)
                     
-                # Get chapter time from ChapterTime property
-                time_str = xbmc.getInfoLabel(f'VideoPlayer.ChapterTime({i})')
-                if time_str and ':' in time_str:
-                    # Parse time string (format: HH:MM:SS)
-                    parts = time_str.split(':')
-                    if len(parts) == 3:
-                        hours, minutes, seconds = map(int, parts)
-                        chapter_time = hours * 3600 + minutes * 60 + seconds
+                    if time_str and ':' in time_str:
+                        # Parse time string (format: HH:MM:SS)
+                        parts = time_str.split(':')
+                        if len(parts) == 3:
+                            hours, minutes, seconds = map(int, parts)
+                            chapter_time = hours * 3600 + minutes * 60 + seconds
+                            chapters.append({
+                                'name': chapter_name,
+                                'time': chapter_time
+                            })
+                            xbmc.log(f'SkipIntro: Added chapter {i}: {chapter_name} at {chapter_time}s', 
+                                    xbmc.LOGINFO)
+                        else:
+                            xbmc.log(f'SkipIntro: Invalid time format for chapter {i}: {time_str}', xbmc.LOGWARNING)
                     else:
-                        xbmc.log(f'SkipIntro: Invalid time format for chapter {i}: {time_str}', xbmc.LOGWARNING)
-                        continue
-                else:
-                    xbmc.log(f'SkipIntro: No time available for chapter {i}', xbmc.LOGWARNING)
+                        xbmc.log(f'SkipIntro: No time available for chapter {i}', xbmc.LOGWARNING)
+                except Exception as e:
+                    xbmc.log(f'SkipIntro: Error processing chapter {i}: {str(e)}', xbmc.LOGWARNING)
                     continue
-                chapters.append({
-                    'name': chapter_name,
-                    'time': chapter_time
-                })
-                xbmc.log(f'SkipIntro: Added chapter {i}: {chapter_name} at {chapter_time}s', 
-                        xbmc.LOGINFO)
             
             return chapters
         except Exception as e:
