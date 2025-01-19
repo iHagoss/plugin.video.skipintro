@@ -37,7 +37,9 @@ class ChapterManager:
             chapter_count_str = xbmc.getInfoLabel('VideoPlayer.ChapterCount')
             player_chapter_count = player.getTotalChapters()
             
-            xbmc.log(f'SkipIntro: Chapter counts - InfoLabel: {chapter_count_str}, Player API: {player_chapter_count}', xbmc.LOGINFO)
+            xbmc.log(f'SkipIntro: Chapter detection methods:', xbmc.LOGINFO)
+            xbmc.log(f'SkipIntro: - InfoLabel ChapterCount: "{chapter_count_str}"', xbmc.LOGINFO)
+            xbmc.log(f'SkipIntro: - Player API getTotalChapters: {player_chapter_count}', xbmc.LOGINFO)
             
             # Use the larger of the two counts
             try:
@@ -58,14 +60,22 @@ class ChapterManager:
                     time_str = xbmc.getInfoLabel(f'VideoPlayer.ChapterTime({i})')
                     method_used = 'InfoLabel'
                     
+                    xbmc.log(f'SkipIntro: Chapter {i} InfoLabel data:', xbmc.LOGINFO)
+                    xbmc.log(f'SkipIntro: - ChapterName: "{chapter_name}"', xbmc.LOGINFO)
+                    xbmc.log(f'SkipIntro: - ChapterTime: "{time_str}"', xbmc.LOGINFO)
+                    
                     # Fallback to player method if InfoLabel fails
                     if not time_str:
                         try:
+                            xbmc.log(f'SkipIntro: Attempting Player API fallback for chapter {i}', xbmc.LOGINFO)
                             player.seekChapter(i)
                             time_str = xbmc.getInfoLabel('VideoPlayer.Time')
                             method_used = 'Player API'
+                            xbmc.log(f'SkipIntro: Player API fallback got time: "{time_str}"', xbmc.LOGINFO)
                         except Exception as e:
-                            xbmc.log(f'SkipIntro: Player API fallback failed: {str(e)}', xbmc.LOGWARNING)
+                            xbmc.log(f'SkipIntro: Player API fallback failed for chapter {i}:', xbmc.LOGWARNING)
+                            xbmc.log(f'SkipIntro: Exception details: {str(e)}', xbmc.LOGWARNING)
+                            xbmc.log(f'SkipIntro: Exception type: {type(e).__name__}', xbmc.LOGWARNING)
                             continue
                             
                     if not chapter_name or chapter_name.isspace():

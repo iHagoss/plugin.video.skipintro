@@ -215,7 +215,13 @@ class SkipIntroPlayer(xbmc.Player):
             # Retrieve chapters
             chapters = self.getChapters()
             if chapters:
-                xbmc.log('SkipIntro: Found {} chapters'.format(len(chapters)), xbmc.LOGDEBUG)
+                xbmc.log('SkipIntro: Found {} chapters'.format(len(chapters)), xbmc.LOGINFO)
+                xbmc.log('SkipIntro: Chapter details:', xbmc.LOGINFO)
+                for idx, chapter in enumerate(chapters, 1):
+                    xbmc.log(f'SkipIntro: Chapter {idx}:', xbmc.LOGINFO)
+                    xbmc.log(f'SkipIntro: - Name: "{chapter["name"]}"', xbmc.LOGINFO)
+                    xbmc.log(f'SkipIntro: - Time: {chapter["time"]} seconds', xbmc.LOGINFO)
+                    xbmc.log(f'SkipIntro: - Number: {chapter["number"]}', xbmc.LOGINFO)
                 intro_start = self.find_intro_chapter(chapters)
                 if intro_start is not None:
                     intro_chapter_index = None
