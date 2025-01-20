@@ -7,3 +7,5 @@ plugin.video.skipintro.code-workspace
 dev-setup.sh
 build.sh
 __pycache__/
+resources/lib/reload.py
+ffmpeg-test.py

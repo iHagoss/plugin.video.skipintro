@@ -1,6 +1,6 @@
 <addon id="plugin.video.skipintro"
     name="Skip Intro Addon"
-    version="1.3.0"
+    version="1.3.2"
     provider-name="Amgad Abdelhafez">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
@@ -23,14 +23,16 @@
             TV shows. Features include:
             - Automatic show and episode detection
             - Saves intro/outro times for future playback
-            - Multiple detection methods: chapter markers, user input, and more
+            - Smart chapter detection using ffprobe (will notify if not installed)
             - Configurable skip settings and database options</description>
         <platform>all</platform>
         <assets>
             <icon>resources/icon.png</icon>
         </assets>
-        <news>v1.3.0 - Added database for storing show times, multiple detection methods including
-            user input, improved settings, and better chapter handling. Added show-level defaults
-            and duration-based skipping.</news>
+        <news>v1.3.2 (2024-01-19)
+            - Switched to ffmpeg for reliable chapter detection
+            - Improved skip intro prompt handling
+            - Better performance with optimized caching
+            - Reduced logging for cleaner operation</news>
     </extension>
 </addon>
