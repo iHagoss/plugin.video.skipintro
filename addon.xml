@@ -9,6 +9,7 @@
     <extension point="xbmc.service" library="default.py">
         <provides>video</provides>
     </extension>
+
     <extension point="kodi.context.item" library="context.py">
         <item>
             <label>32030</label>
@@ -17,6 +18,12 @@
                 !String.IsEmpty(ListItem.Path)</visible>
         </item>
     </extension>
+
+    <extension point="xbmc.gui.skin" debugging="false" effectslowdown="1.0">
+        <res width="1280" height="720" aspect="16:9" default="true"
+            folder="resources/skins/default/720p" />
+    </extension>
+
     <extension point="xbmc.addon.metadata">
         <summary lang="en">Smart intro/outro detection and skipping for TV shows</summary>
         <description lang="en">This add-on automatically detects and remembers intro/outro times for

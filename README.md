@@ -20,15 +20,16 @@ The Skip Intro Addon for Kodi intelligently detects, remembers, and skips TV sho
     - Configurable default timing
     - Online API support (coming soon)
 
-- **User-Friendly Settings**
+- **User-Friendly Interface**
 
-  - Configurable delay and skip duration
-  - Database location customization
-  - Toggle different detection methods
-  - Option to save detected times
-  - Show-level default times
+  - Clean, focused skip button in bottom right
+  - Auto-focused for immediate skipping
+  - Works with remote control, keyboard, and mouse
+  - Smooth fade in/out animations
+  - Non-intrusive design
 
 - **Technical Features**
+  - Efficient time tracking using native Kodi events
   - SQLite database for efficient storage
   - Smart duration parsing (HH:MM:SS, MM:SS)
   - Comprehensive error handling
@@ -114,9 +115,9 @@ The addon uses multiple methods to detect and skip intros:
 
    There are two ways to access the time input feature:
 
-   1. Through Skip Intro Prompt:
+   1. Through Skip Intro Button:
 
-      - When the skip prompt appears, select "Set Times"
+      - When the skip button appears, press menu/info
       - Choose chapters or enter manual times
       - Times are saved for future playback
 
@@ -155,7 +156,7 @@ The addon uses multiple methods to detect and skip intros:
 4. **Default Skip:**
 
    - Falls back to configured delay if no other times found
-   - Shows skip prompt after delay time
+   - Shows skip button after delay time
    - Option to save user-confirmed times
 
 5. **Online API** (Coming Soon):
@@ -235,6 +236,15 @@ plugin.video.skipintro/
 This project is licensed under the MIT License.
 
 ## Changelog
+
+### v1.3.2
+
+- Improved skip button UI and positioning
+- Added smooth fade animations
+- Switched to native Kodi event system
+- Better performance and reliability
+- Improved logging for troubleshooting
+- Fixed timing issues during playback
 
 ### v1.3.0
 

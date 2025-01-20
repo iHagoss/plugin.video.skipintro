@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<window type="dialog">
+    <coordinates>
+        <system>1</system>
+    </coordinates>
+    <controls>
+        <control type="button" id="1">
+            <description>Skip Intro button</description>
+            <posx>1020</posx>
+            <posy>600</posy>
+            <width>200</width>
+            <height>50</height>
+            <label>Skip Intro</label>
+            <font>font13</font>
+            <textcolor>white</textcolor>
+            <focusedcolor>white</focusedcolor>
+            <disabledcolor>white</disabledcolor>
+            <shadowcolor>black</shadowcolor>
+            <align>right</align>
+            <aligny>center</aligny>
+            <textoffsetx>10</textoffsetx>
+            <texturefocus colordiffuse="FF12B2E7">DefaultButton.png</texturefocus>
+            <texturenofocus>DefaultButton.png</texturenofocus>
+            <animation effect="fade" start="0" end="100" time="200">WindowOpen</animation>
+            <animation effect="fade" start="100" end="0" time="200">WindowClose</animation>
+            <onup>1</onup>
+            <ondown>1</ondown>
+            <onleft>1</onleft>
+            <onright>1</onright>
+        </control>
+    </controls>
+</window>
