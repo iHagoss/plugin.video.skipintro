@@ -12,6 +12,7 @@ import xbmcaddon
 import xbmcgui
 import xbmcvfs
 import os
+import time
 
 from resources.lib.settings import Settings
 from resources.lib.chapters import ChapterManager
@@ -59,6 +60,10 @@ class SkipIntroPlayer(xbmc.Player):
         self.settings_manager = Settings()
         self.settings = self.settings_manager.settings
         
+        # New timing control variables
+        self.timer_active = False
+        self.next_check_time = 0
+        
     def onPlayBackStopped(self):
         """Called when playback is stopped by user"""
         self.cleanup()
@@ -79,6 +84,8 @@ class SkipIntroPlayer(xbmc.Player):
         self.bookmarks_checked = False
         self.prompt_shown = False
         self.default_skip_checked = False
+        self.timer_active = False
+        self.next_check_time = 0
         
         # Wait longer for video info and chapters to be available
         xbmc.sleep(5000)  # Initial 5 second wait
@@ -108,25 +115,35 @@ class SkipIntroPlayer(xbmc.Player):
                 self.check_for_default_skip()
             self.bookmarks_checked = True
             
-            # If we have intro times, start checking
+            # If we have intro times, set up the timer
             if self.intro_start is not None and self.intro_bookmark is not None:
-                xbmc.log(f'SkipIntro: Starting time monitoring for intro period {self.intro_start}-{self.intro_bookmark}', xbmc.LOGINFO)
-                self.check_intro_time()
+                current_time = self.getTime()
+                if current_time < self.intro_start:
+                    # Set timer to wake up just before intro starts
+                    self.next_check_time = self.intro_start
+                    self.timer_active = True
+                    xbmc.log(f'SkipIntro: Timer set to check at {self.next_check_time}', xbmc.LOGINFO)
+                elif current_time < self.intro_bookmark:
+                    # Already in intro period, show button immediately
+                    self.show_skip_button()
 
     def onPlayBackTime(self, time):
         """Called during playback with current time"""
-        xbmc.log(f'SkipIntro: onPlayBackTime called at {time}', xbmc.LOGINFO)
-        
+        if not self.prompt_shown and self.timer_active:
+            if time >= self.next_check_time:
+                xbmc.log(f'SkipIntro: Timer triggered at {time}', xbmc.LOGINFO)
+                self.show_skip_button()
+                self.timer_active = False  # Disable timer after showing button
+
+    def show_skip_button(self):
+        """Show skip intro button and handle timing"""
         if not self.prompt_shown and self.intro_start is not None and self.intro_bookmark is not None:
-            xbmc.log(f'SkipIntro: Checking time {time} against intro period {self.intro_start}-{self.intro_bookmark}', xbmc.LOGINFO)
-            
-            if time >= self.intro_start and time < self.intro_bookmark:
-                xbmc.log(f'SkipIntro: In intro period at {time}, showing skip button', xbmc.LOGINFO)
+            current_time = self.getTime()
+            if current_time >= self.intro_start and current_time < self.intro_bookmark:
+                xbmc.log(f'SkipIntro: Showing skip button at {current_time}', xbmc.LOGINFO)
                 if self.ui.prompt_skip_intro(lambda: self.skip_to_intro_end()):
                     self.prompt_shown = True
                     xbmc.log('SkipIntro: Skip button shown successfully', xbmc.LOGINFO)
-            else:
-                xbmc.log(f'SkipIntro: Not in intro period yet', xbmc.LOGINFO)
 
     def detect_show(self):
         """Detect current TV show and episode"""
@@ -308,37 +325,16 @@ class SkipIntroPlayer(xbmc.Player):
             if current_time >= default_delay:
                 self.intro_bookmark = current_time + skip_duration
                 xbmc.log(f'SkipIntro: Using default skip - will skip to: {self.intro_bookmark}', xbmc.LOGINFO)
-                self.prompt_skip_intro()
+                self.show_skip_button()
             else:
-                xbmc.log('SkipIntro: Not yet at default skip delay', xbmc.LOGINFO)
+                # Set up timer for default skip
+                self.next_check_time = default_delay
+                self.timer_active = True
+                xbmc.log(f'SkipIntro: Set timer for default skip at {default_delay}', xbmc.LOGINFO)
         except Exception as e:
             xbmc.log('SkipIntro: Error in default skip check: {}'.format(str(e)), xbmc.LOGERROR)
 
         self.default_skip_checked = True
-
-    def prompt_skip_intro(self):
-        """Show skip intro button"""
-        try:
-            if self.ui.prompt_skip_intro(lambda: self.skip_to_intro_end()):
-                # If we used default skip, save the time
-                if self.settings['save_times'] and self.show_info and self.db and not self.bookmarks_checked:
-                    show_id = self.db.get_show(self.show_info['title'])
-                    times = {
-                        'intro_start_time': self.settings['default_delay'],
-                        'intro_duration_time': self.settings['skip_duration'],
-                        'intro_start_chapter': None,
-                        'outro_start_chapter': None,
-                        'outro_start_time': None,
-                        'source': 'default'
-                    }
-                    self.db.save_episode_times(
-                        show_id,
-                        self.show_info['season'],
-                        self.show_info['episode'],
-                        times
-                    )
-        except Exception as e:
-            xbmc.log('SkipIntro: Error showing skip button: {}'.format(str(e)), xbmc.LOGERROR)
 
     def skip_to_intro_end(self):
         if self.intro_bookmark:
@@ -349,21 +345,6 @@ class SkipIntroPlayer(xbmc.Player):
                 xbmc.log('SkipIntro: Skip completed', xbmc.LOGINFO)
             except Exception as e:
                 xbmc.log('SkipIntro: Error skipping to intro end: {}'.format(str(e)), xbmc.LOGERROR)
-
-    def check_intro_time(self):
-        """Check if we need to show the skip intro prompt"""
-        try:
-            if not self.prompt_shown and self.intro_start is not None and self.intro_bookmark is not None:
-                current_time = self.getTime()
-                xbmc.log(f'SkipIntro: Time check - current: {current_time}, start: {self.intro_start}, end: {self.intro_bookmark}', xbmc.LOGINFO)
-                
-                if current_time >= self.intro_start and current_time < self.intro_bookmark:
-                    xbmc.log('SkipIntro: In intro period, showing skip button', xbmc.LOGINFO)
-                    if self.ui.prompt_skip_intro(lambda: self.skip_to_intro_end()):
-                        self.prompt_shown = True
-                        xbmc.log('SkipIntro: Skip button shown successfully', xbmc.LOGINFO)
-        except Exception as e:
-            xbmc.log('SkipIntro: Error checking intro time: {}'.format(str(e)), xbmc.LOGERROR)
 
     def cleanup(self):
         """Clean up resources"""
@@ -376,6 +357,8 @@ class SkipIntroPlayer(xbmc.Player):
         self.default_skip_checked = False
         self.prompt_shown = False
         self.show_info = None
+        self.timer_active = False
+        self.next_check_time = 0
 
 def main():
     xbmc.log('SkipIntro: Service starting', xbmc.LOGINFO)
@@ -383,18 +366,17 @@ def main():
     monitor = xbmc.Monitor()
 
     try:
+        # Main service loop
         while not monitor.abortRequested():
-            if monitor.waitForAbort(1):  # Wait up to 1 second for abort
+            if monitor.waitForAbort(0.5):  # Check every 500ms
                 break
                 
-            if player.isPlaying():
+            if player.isPlaying() and player.timer_active:
                 try:
                     time = player.getTime()
                     player.onPlayBackTime(time)
                 except Exception as e:
                     xbmc.log(f'SkipIntro: Error checking playback time: {str(e)}', xbmc.LOGERROR)
-                    
-            xbmc.sleep(200)  # Brief sleep to prevent excessive CPU usage
                 
     except Exception as e:
         xbmc.log(f'SkipIntro: Error in main loop: {str(e)}', xbmc.LOGERROR)
