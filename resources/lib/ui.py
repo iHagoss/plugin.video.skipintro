@@ -1,6 +1,7 @@
 import xbmc
 import xbmcgui
 import xbmcaddon
+import os
 
 class SkipIntroDialog(xbmcgui.WindowXMLDialog):
     def __init__(self, *args, **kwargs):
@@ -9,9 +10,15 @@ class SkipIntroDialog(xbmcgui.WindowXMLDialog):
 
     def onInit(self):
         xbmc.log('SkipIntro: Button window initialized', xbmc.LOGINFO)
-        self.button = self.getControl(1)
-        self.setFocus(self.button)
-        xbmc.log('SkipIntro: Button focused', xbmc.LOGINFO)
+        try:
+            self.button = self.getControl(1)
+            xbmc.log('SkipIntro: Got button control', xbmc.LOGINFO)
+            self.setFocus(self.button)
+            xbmc.log('SkipIntro: Button focused', xbmc.LOGINFO)
+        except Exception as e:
+            xbmc.log(f'SkipIntro: Error in onInit: {str(e)}', xbmc.LOGERROR)
+            import traceback
+            xbmc.log(f'SkipIntro: Traceback: {traceback.format_exc()}', xbmc.LOGERROR)
 
     def onClick(self, controlId):
         xbmc.log(f'SkipIntro: Button clicked - control ID: {controlId}', xbmc.LOGINFO)
@@ -38,20 +45,33 @@ class PlayerUI:
         xbmc.log('SkipIntro: Showing skip intro button', xbmc.LOGINFO)
         try:
             if not self.prompt_shown and self._dialog is None:
+                addon = xbmcaddon.Addon()
+                addon_path = addon.getAddonInfo('path')
+                xml_path = os.path.join(addon_path, 'resources', 'skins', 'default', '720p', 'skip_button.xml')
+                
+                xbmc.log(f'SkipIntro: XML path: {xml_path}', xbmc.LOGINFO)
+                xbmc.log(f'SkipIntro: XML exists: {os.path.exists(xml_path)}', xbmc.LOGINFO)
+                
                 self._dialog = SkipIntroDialog(
                     'skip_button.xml',
-                    xbmcaddon.Addon().getAddonInfo('path'),
+                    addon_path,
                     'default',
                     '720p',
                     callback=callback
                 )
+                xbmc.log('SkipIntro: Dialog instance created', xbmc.LOGINFO)
+                
                 self._dialog.show()
+                xbmc.log('SkipIntro: Dialog show() called', xbmc.LOGINFO)
+                
                 self.prompt_shown = True
                 return True
             return False
                 
         except Exception as e:
-            xbmc.log('SkipIntro: Error showing skip button: {}'.format(str(e)), xbmc.LOGERROR)
+            xbmc.log(f'SkipIntro: Error showing skip button: {str(e)}', xbmc.LOGERROR)
+            import traceback
+            xbmc.log(f'SkipIntro: Traceback: {traceback.format_exc()}', xbmc.LOGERROR)
             self.cleanup()
             return False
             

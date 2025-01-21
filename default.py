@@ -1,8 +1,18 @@
+# Add these lines at the very beginning of default.py, before any other imports
+try:
+    import ptvsd
+    ptvsd.enable_attach(address=('localhost', 5678))
+    # If you want the script to wait for the debugger to attach, uncomment next line
+    # ptvsd.wait_for_attach()
+except:
+    pass
+
 import xbmc
 import xbmcaddon
 import xbmcgui
 import xbmcvfs
 import os
+
 from resources.lib.settings import Settings
 from resources.lib.chapters import ChapterManager
 from resources.lib.ui import PlayerUI
@@ -105,12 +115,18 @@ class SkipIntroPlayer(xbmc.Player):
 
     def onPlayBackTime(self, time):
         """Called during playback with current time"""
+        xbmc.log(f'SkipIntro: onPlayBackTime called at {time}', xbmc.LOGINFO)
+        
         if not self.prompt_shown and self.intro_start is not None and self.intro_bookmark is not None:
+            xbmc.log(f'SkipIntro: Checking time {time} against intro period {self.intro_start}-{self.intro_bookmark}', xbmc.LOGINFO)
+            
             if time >= self.intro_start and time < self.intro_bookmark:
                 xbmc.log(f'SkipIntro: In intro period at {time}, showing skip button', xbmc.LOGINFO)
                 if self.ui.prompt_skip_intro(lambda: self.skip_to_intro_end()):
                     self.prompt_shown = True
                     xbmc.log('SkipIntro: Skip button shown successfully', xbmc.LOGINFO)
+            else:
+                xbmc.log(f'SkipIntro: Not in intro period yet', xbmc.LOGINFO)
 
     def detect_show(self):
         """Detect current TV show and episode"""
@@ -362,16 +378,32 @@ class SkipIntroPlayer(xbmc.Player):
         self.show_info = None
 
 def main():
+    xbmc.log('SkipIntro: Service starting', xbmc.LOGINFO)
     player = SkipIntroPlayer()
     monitor = xbmc.Monitor()
 
     try:
         while not monitor.abortRequested():
-            if monitor.waitForAbort(1):  # Just keep service alive
+            if monitor.waitForAbort(1):  # Wait up to 1 second for abort
                 break
+                
+            if player.isPlaying():
+                try:
+                    time = player.getTime()
+                    player.onPlayBackTime(time)
+                except Exception as e:
+                    xbmc.log(f'SkipIntro: Error checking playback time: {str(e)}', xbmc.LOGERROR)
+                    
+            xbmc.sleep(200)  # Brief sleep to prevent excessive CPU usage
+                
+    except Exception as e:
+        xbmc.log(f'SkipIntro: Error in main loop: {str(e)}', xbmc.LOGERROR)
     finally:
-        player.cleanup()
-        xbmc.log('SkipIntro: Service stopped', xbmc.LOGINFO)
+        try:
+            player.cleanup()
+            xbmc.log('SkipIntro: Service stopped', xbmc.LOGINFO)
+        except:
+            pass  # Ensure we don't hang during cleanup
 
 if __name__ == '__main__':
     main()
