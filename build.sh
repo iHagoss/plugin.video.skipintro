@@ -6,7 +6,7 @@ set -e
 echo "Building Skip Intro addon..."
 
 # Get current version from addon.xml
-VERSION=$(grep -oP 'version="\K[^"]+' addon.xml)
+VERSION=$(grep -oP 'id="plugin\.video\.skipintro"[^>]*version="\K[^"]+' addon.xml)
 echo "Current version: $VERSION"
 
 # Check version consistency in README
