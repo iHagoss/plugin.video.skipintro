@@ -109,21 +109,53 @@ msgid "Duration of intro sequence when using show defaults (10-300 seconds)"
 msgstr ""
 
 msgctxt "#32050"
-msgid "Intro Start Time"
+msgid "Intro/Outro Points"
 msgstr ""
 
 msgctxt "#32051"
-msgid "Intro Duration"
+msgid "Intro Start Chapter"
 msgstr ""
 
 msgctxt "#32052"
-msgid "Outro Start Time"
+msgid "Chapter to start skipping from (0 or empty for video start)"
 msgstr ""
 
 msgctxt "#32053"
-msgid "Intro Chapter"
+msgid "Intro End Chapter"
+msgstr ""
+
+msgctxt "#32054"
+msgid "Chapter to skip to (required)"
 msgstr ""
 
 msgctxt "#32055"
 msgid "Outro Start Chapter"
+msgstr ""
+
+msgctxt "#32056"
+msgid "Chapter to skip from for outro (optional)"
+msgstr ""
+
+msgctxt "#32057"
+msgid "Intro Start Time"
+msgstr ""
+
+msgctxt "#32058"
+msgid "Time to start skipping from in seconds (0 or empty for video start)"
+msgstr ""
+
+msgctxt "#32059"
+msgid "Intro End Time"
+msgstr ""
+
+msgctxt "#32060"
+msgid "Time to skip to in seconds (required)"
+msgstr ""
+
+msgctxt "#32061"
+msgid "Outro Start Time"
+msgstr ""
+
+msgctxt "#32062"
+msgid "Time to skip from for outro in seconds (optional)"
 msgstr ""

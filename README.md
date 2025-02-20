@@ -237,6 +237,14 @@ This project is licensed under the MIT License.
 
 ## Changelog
 
+### v1.3.3
+
+- Fixed issue with setting manual skip times
+- Improved database structure for new show entries
+- Enhanced error handling and logging for better diagnostics
+- Added verification of saved configurations
+- Updated documentation
+
 ### v1.3.2
 
 - Improved skip button UI and positioning
@@ -264,3 +272,11 @@ This project is licensed under the MIT License.
 - Added localization support
 - Improved memory management
 - Added unit tests
+
+## Troubleshooting
+
+If you encounter any issues with setting manual skip times:
+
+1. Try setting manual skip times for a show again.
+2. If problems persist, check the Kodi log file for detailed information about the process. Look for log entries starting with "SkipIntro:".
+3. If you still experience issues, please report them on our GitHub issues page, including the relevant log entries for further investigation.

@@ -1,3 +1,4 @@
+
 import xbmc
 import xbmcgui
 import xbmcaddon
@@ -6,6 +7,7 @@ import json
 import os
 from resources.lib.database import ShowDatabase
 from resources.lib.metadata import ShowMetadata
+from resources.lib.chapters import ChapterManager
 
 def get_selected_item_info():
     """Get info about the selected item in Kodi"""
@@ -36,96 +38,127 @@ def get_selected_item_info():
     return None
 
 def get_show_settings(show_id, db):
-    """Get or create show settings"""
-    config = db.get_show_config(show_id)
-    if not config:
-        config = {
-            'use_defaults': True,
-            'use_chapters': False,
-            'intro_duration': 60
-        }
-        db.save_show_config(show_id, config)
-    return config
+    """Get show settings"""
+    return db.get_show_config(show_id)
+
+def get_time_input(dialog, prompt, default='', required=True):
+    """Helper function to get properly formatted time input"""
+    while True:
+        # Use time input type (2) for MM:SS format, with default value if available
+        time_str = dialog.numeric(2, prompt, default)
+        if not time_str:
+            if not required:
+                return None
+            if dialog.yesno('Skip Intro', 'This field is required. Try again?'):
+                continue
+            return None
+        
+        try:
+            # Parse time input
+            parts = time_str.split(':')
+            if len(parts) == 2:
+                minutes = int(parts[0])
+                seconds = int(parts[1])
+                if seconds < 60:
+                    return time_str  # Return the original formatted string
+        except:
+            pass
+        
+        if dialog.yesno('Skip Intro', 'Invalid time format. Try again?'):
+            continue
+        return None
 
 def get_manual_times(show_id, db):
-    """Get times manually from user input"""
+    """Get times manually from user input or select chapters"""
     try:
         dialog = xbmcgui.Dialog()
-        addon = xbmcaddon.Addon()
         
-        # Get show config
+        # Get existing show config
         config = get_show_settings(show_id, db)
         
-        # Ask if using chapters
-        if addon.getSettingBool('use_chapters'):
-            use_chapters = dialog.yesno('Skip Intro', 'Use chapter numbers for skipping?\n(Will use next chapter as end point)')
-            if use_chapters:
-                intro_start = dialog.numeric(0, 'Enter Intro Chapter Number')
-                if not intro_start:
-                    return None
-                    
-                outro_start = dialog.numeric(0, 'Enter Outro Start Chapter Number (Optional)')
-                
-                # Update show config with chapter settings
-                config.update({
-                    'use_defaults': True,
-                    'use_chapters': True,
-                    'intro_start_chapter': int(intro_start),
-                    'outro_start_chapter': int(outro_start) if outro_start else None
-                })
-                db.save_show_config(show_id, config)
-                
-                # Return empty dict to indicate success without episode-specific save
-                return {}
+        # Ask user to choose between manual time input or chapter selection
+        choice = dialog.select('Choose skip method', ['Manual time input', 'Chapter selection'])
         
-        # Time-based input
-        intro_start = dialog.numeric(2, 'Enter Intro Start Time (MM:SS)')
-        if not intro_start:
+        if choice == 0:  # Manual time input
+            return get_manual_time_input(dialog, config)
+        elif choice == 1:  # Chapter selection
+            return get_chapter_selection(dialog)
+        else:
             return None
-            
-        intro_duration = dialog.numeric(2, 'Enter Intro Duration (MM:SS)')
-        if not intro_duration:
-            return None
-            
-        outro_start = dialog.numeric(2, 'Enter Outro Start Time (MM:SS) (Optional)')
         
-        # Convert MM:SS to seconds using built-in time parsing
-        def time_to_seconds(time_str):
-            if not time_str:
-                return None
-            try:
-                parts = time_str.split(':')
-                return int(parts[0]) * 60 + int(parts[1]) if len(parts) == 2 else None
-            except (ValueError, IndexError):
-                return None
-            
-        # Ask if these times should be used for all episodes
-        use_defaults = dialog.yesno('Skip Intro', 'Use these times for all episodes of this show?')
-        
-        times = {
-            'intro_start_chapter': None,
-            'outro_start_chapter': None,
-            'intro_start_time': time_to_seconds(intro_start),
-            'intro_duration_time': time_to_seconds(intro_duration),
-            'outro_start_time': time_to_seconds(outro_start) if outro_start else None,
-            'source': 'manual'
-        }
-        
-        # Update show config
-        config.update({
-            'use_defaults': use_defaults,
-            'use_chapters': False,
-            'intro_duration': time_to_seconds(intro_duration)
-        })
-        db.save_show_config(show_id, config)
-        
-        return times
     except Exception as e:
         xbmc.log(f'SkipIntro: Error getting manual times: {str(e)}', xbmc.LOGERROR)
         return None
 
+def get_manual_time_input(dialog, config):
+    """Get times manually from user input"""
+    # Convert seconds to MM:SS format
+    def seconds_to_time(seconds):
+        if seconds is None:
+            return ''
+        minutes = int(seconds) // 60
+        secs = int(seconds) % 60
+        return f"{minutes:02d}:{secs:02d}"
+
+    # Get default values from existing config
+    default_intro_start = seconds_to_time(config.get('intro_start_time')) if config else ''
+    default_intro_end = seconds_to_time(config.get('intro_end_time')) if config else ''
+    default_outro_start = seconds_to_time(config.get('outro_start_time')) if config else ''
+    
+    # Get times using the helper function with defaults
+    intro_start = get_time_input(dialog, 'Enter Intro Start Time (0 or empty for video start)', default_intro_start, required=False)
+    if intro_start is None:
+        return None
+        
+    intro_end = get_time_input(dialog, 'Enter Intro End Time (required)', default_intro_end, required=True)
+    if intro_end is None:
+        return None
+        
+    outro_start = get_time_input(dialog, 'Enter Outro Start Time (optional)', default_outro_start, required=False)
+    
+    # Convert MM:SS to seconds
+    def time_to_seconds(time_str):
+        if not time_str:
+            return None
+        try:
+            parts = time_str.split(':')
+            return int(parts[0]) * 60 + int(parts[1]) if len(parts) == 2 else None
+        except (ValueError, IndexError):
+            return None
+        
+    return {
+        'intro_start_time': time_to_seconds(intro_start),
+        'intro_end_time': time_to_seconds(intro_end),
+        'outro_start_time': time_to_seconds(outro_start) if outro_start else None
+    }
+
+def get_chapter_selection(dialog):
+    """Get chapter numbers for intro and outro"""
+    intro_start = dialog.numeric(0, 'Enter Intro Start Chapter Number', '')
+    if not intro_start:
+        return None
+    intro_start = int(intro_start)
+
+    intro_end = dialog.numeric(0, 'Enter Intro End Chapter Number', '')
+    if not intro_end:
+        return None
+    intro_end = int(intro_end)
+
+    outro_start = dialog.numeric(0, 'Enter Outro Start Chapter Number (Optional)', '')
+    outro_start = int(outro_start) if outro_start else None
+
+    return {
+        'use_chapters': True,
+        'intro_start_chapter': intro_start,
+        'intro_end_chapter': intro_end,
+        'outro_start_chapter': outro_start,
+        'intro_start_time': None,
+        'intro_end_time': None,
+        'outro_start_time': None
+    }
+
 def save_user_times():
-    """Save user-provided times for show/episode"""
+    """Save user-provided times for show"""
     xbmc.log('SkipIntro: Starting manual time input', xbmc.LOGINFO)
     
     item = get_selected_item_info()
@@ -133,6 +166,8 @@ def save_user_times():
         xbmc.log('SkipIntro: No item selected', xbmc.LOGERROR)
         xbmcgui.Dialog().notification('Skip Intro', 'No item selected', xbmcgui.NOTIFICATION_ERROR)
         return
+    
+    xbmc.log(f'SkipIntro: Selected item info: {item}', xbmc.LOGINFO)
         
     # Initialize database
     xbmc.log('SkipIntro: Initializing database', xbmc.LOGINFO)
@@ -154,15 +189,19 @@ def save_user_times():
         db = ShowDatabase(translated_path)
         if not db:
             raise Exception("Failed to initialize database")
+        xbmc.log('SkipIntro: Database initialized successfully', xbmc.LOGINFO)
     except Exception as e:
         xbmc.log(f'SkipIntro: Database initialization error: {str(e)}', xbmc.LOGERROR)
         xbmcgui.Dialog().notification('Skip Intro', 'Database error', xbmcgui.NOTIFICATION_ERROR)
         return
+    
     show_id = db.get_show(item['showtitle'])
     if not show_id:
         xbmc.log('SkipIntro: Failed to get show ID', xbmc.LOGERROR)
         xbmcgui.Dialog().notification('Skip Intro', 'Database error', xbmcgui.NOTIFICATION_ERROR)
         return
+    
+    xbmc.log(f'SkipIntro: Got show ID: {show_id}', xbmc.LOGINFO)
     
     # Get times from user
     times = get_manual_times(show_id, db)
@@ -170,24 +209,40 @@ def save_user_times():
         xbmc.log('SkipIntro: User cancelled time input', xbmc.LOGINFO)
         return
     
-    if times:  # Only save episode times if we have times to save
-        xbmc.log(f'SkipIntro: Saving episode times: {times}', xbmc.LOGINFO)
-        success = db.save_episode_times(
-            show_id,
-            item['season'],
-            item['episode'],
-            times
-        )
+    xbmc.log(f'SkipIntro: User input times: {times}', xbmc.LOGINFO)
+    
+    # Save times or chapters for the show
+    try:
+        if 'use_chapters' in times and times['use_chapters']:
+            xbmc.log('SkipIntro: Saving chapter-based configuration', xbmc.LOGINFO)
+            success = db.set_manual_show_chapters(
+                show_id,
+                times['use_chapters'],
+                times.get('intro_start_chapter'),
+                times.get('intro_end_chapter'),
+                times.get('outro_start_chapter')
+            )
+        else:
+            xbmc.log('SkipIntro: Saving time-based configuration', xbmc.LOGINFO)
+            success = db.set_manual_show_times(
+                show_id,
+                times.get('intro_start_time'),
+                times.get('intro_end_time'),
+                times.get('outro_start_time')
+            )
         
         if success:
-            xbmc.log('SkipIntro: Episode times saved successfully', xbmc.LOGINFO)
+            xbmc.log('SkipIntro: Show times saved successfully', xbmc.LOGINFO)
             xbmcgui.Dialog().notification('Skip Intro', 'Times saved successfully', xbmcgui.NOTIFICATION_INFO)
         else:
-            xbmc.log('SkipIntro: Failed to save episode times', xbmc.LOGERROR)
-            xbmcgui.Dialog().notification('Skip Intro', 'Failed to save times', xbmcgui.NOTIFICATION_ERROR)
-    else:
-        xbmc.log('SkipIntro: Show config updated successfully', xbmc.LOGINFO)
-        xbmcgui.Dialog().notification('Skip Intro', 'Show settings saved', xbmcgui.NOTIFICATION_INFO)
+            raise Exception("Failed to save show times")
+    except Exception as e:
+        xbmc.log(f'SkipIntro: Error saving show times: {str(e)}', xbmc.LOGERROR)
+        xbmcgui.Dialog().notification('Skip Intro', 'Failed to save times', xbmcgui.NOTIFICATION_ERROR)
+    
+    # Verify saved times
+    saved_config = db.get_show_config(show_id)
+    xbmc.log(f'SkipIntro: Verified saved configuration: {saved_config}', xbmc.LOGINFO)
 
 if __name__ == '__main__':
     save_user_times()

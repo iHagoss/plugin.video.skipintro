@@ -97,19 +97,55 @@ class ChapterManager:
             xbmc.log(f'SkipIntro: Error getting chapters: {str(e)}', xbmc.LOGERROR)
             return []
 
-    @staticmethod
-    def find_intro_chapter(chapters):
-        """Find the intro chapter based on chapter number."""
-        if not chapters:
+    def get_chapter_by_number(self, chapters, chapter_number):
+        """Get chapter info by chapter number."""
+        if not chapters or chapter_number is None:
             return None
             
         try:
-            if len(chapters) >= 2:
-                # Assume second chapter is intro (common in TV shows where Chapter 1 is "Previously on...")
-                intro_start_time = chapters[1]['time']
-                xbmc.log(f'SkipIntro: Using second chapter as intro at {intro_start_time} seconds', xbmc.LOGINFO)
-                return intro_start_time
+            for chapter in chapters:
+                if chapter['number'] == chapter_number:
+                    return chapter
             return None
         except Exception as e:
-            xbmc.log(f'SkipIntro: Error finding intro chapter: {str(e)}', xbmc.LOGERROR)
+            xbmc.log(f'SkipIntro: Error getting chapter by number: {str(e)}', xbmc.LOGERROR)
+            return None
+
+    def get_intro_chapters(self, chapters, start_chapter, end_chapter):
+        """Get intro start and end chapters based on configured chapter numbers."""
+        if not chapters or end_chapter is None:  # end chapter is required
+            return None, None
+            
+        try:
+            # Get start chapter (optional, defaults to first chapter)
+            start = self.get_chapter_by_number(chapters, start_chapter if start_chapter else 1)
+            if not start and start_chapter:  # Only fail if specific start chapter was requested
+                xbmc.log(f'SkipIntro: Start chapter {start_chapter} not found', xbmc.LOGWARNING)
+                return None, None
+                
+            # Get end chapter (required)
+            end = self.get_chapter_by_number(chapters, end_chapter)
+            if not end:
+                xbmc.log(f'SkipIntro: End chapter {end_chapter} not found', xbmc.LOGWARNING)
+                return None, None
+                
+            return start, end
+        except Exception as e:
+            xbmc.log(f'SkipIntro: Error getting intro chapters: {str(e)}', xbmc.LOGERROR)
+            return None, None
+
+    def get_outro_chapter(self, chapters, outro_chapter):
+        """Get outro chapter based on configured chapter number."""
+        if not chapters or outro_chapter is None:
+            return None
+            
+        try:
+            outro = self.get_chapter_by_number(chapters, outro_chapter)
+            if not outro:
+                xbmc.log(f'SkipIntro: Outro chapter {outro_chapter} not found', xbmc.LOGWARNING)
+                return None
+                
+            return outro
+        except Exception as e:
+            xbmc.log(f'SkipIntro: Error getting outro chapter: {str(e)}', xbmc.LOGERROR)
             return None
