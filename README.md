@@ -237,6 +237,33 @@ This project is licensed under the MIT License.
 
 ## Changelog
 
+### v1.3.8 (2025-02-19)
+
+- Fixed settings parsing errors
+- Improved database migration process
+- Resolved issues with chapter-based skip time selection
+
+### v1.3.7 (2025-02-19)
+
+- Improved chapter-based skip time selection
+- Enhanced database support for chapter-based configurations
+- Fixed issues with saving and retrieving chapter-based settings
+
+### v1.3.6 (2025-02-19)
+
+- Fixed chapter-based skip time selection
+- Improved reliability by using direct chapter number input
+
+### v1.3.5 (2025-02-19)
+
+- Recovered feature to set skip times based on chapters
+- Added option to choose between manual time input and chapter-based selection
+- Updated UI for improved user experience
+
+### v1.3.4 (2025-02-19)
+
+- Initial attempt at fixing database schema issues
+
 ### v1.3.3
 
 - Fixed issue with setting manual skip times
